@@ -1,6 +1,4 @@
-Here's the final README (also attached earlier as `README.md`):
 
-````markdown
 # Vanadium Oxide (V₂O₅) Crossbar – Weight Storage and Inference
 
 Simplified toy model, written in Python.
@@ -180,4 +178,4 @@ Left out to keep every result traceable to a source or a clearly labelled sweep:
 [9] C. R. Harris *et al.*, "Array programming with NumPy," *Nature*, vol. 585, no. 7825, pp. 357–362, 2020, doi: 10.1038/s41586-020-2649-2.
 
 [10] J. D. Hunter, "Matplotlib: A 2D graphics environment," *Comput. Sci. Eng.*, vol. 9, no. 3, pp. 90–95, 2007, doi: 10.1109/MCSE.2007.55.
-````
+
