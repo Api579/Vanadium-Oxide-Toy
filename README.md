@@ -1,4 +1,3 @@
-
 # Vanadium Oxide (V₂O₅) Crossbar – Weight Storage and Inference
 
 Simplified toy model, written in Python.
@@ -59,7 +58,7 @@ python vox_crossbar.py
 
 **Cell (soft-bound model [5])**
 
-For a normalised state w = (G − G_min)/(G_max − G_min), the soft-bound model gives δw₊ = α₊(1 − w)^γ for potentiation and δw₋ = −α₋·w^γ for depression; γ = 1 is the simple soft-bound case [5]. This project uses γ = 1 with separate SET and RESET parameters, because potentiation and depression are asymmetric in measured devices [1], [5].
+For a normalised state w = (G − G_min)/(G_max − G_min), the generalised soft-bound model in [5] gives δw₊ = α(1 − w)^γ for potentiation and δw₋ = −α·w^γ for depression, written with a single α and γ; γ = 1 is the simple soft-bound case. [5] fits potentiation and depression separately, and they behave asymmetrically there and in [1]. This project therefore uses γ = 1 with separate parameters α_set and α_reset; the split into two α values is a modelling choice, not part of the equation in [5].
 
 | Equation | Form | Used for |
 |---|---|---|
@@ -97,9 +96,9 @@ Because the mapping from weights to conductance difference and from pixels to vo
 ## Assumptions and simplifications
 
 - **Phenomenological cell:** no oxygen-vacancy, filament or thermal physics. Conductance follows the soft-bound rule of [5] with γ = 1.
-- **Mixed-source parameters:** pulse conditions and device types from V₂O₅ [1]; read voltage and default conductance range from a TiO₂-based crossbar [3] and an HfO₂ device [5]; update rule from HfO₂ [5]. Each is marked in [Parameters](#parameters).
+- **Mixed-source parameters:** pulse conditions and device types from V₂O₅ [1]; read voltage from an Al₂O₃/TiO₂₋ₓ crossbar [3] and an HfO₂ device [5]; default conductance range from [3] only (the HfO₂ device in [5] works on a ≈ 1 mS scale); update rule from HfO₂ [5]. Each is marked in [Parameters](#parameters).
 - **"Abrupt" is qualitative:** [1] describes D1's SET as abrupt in its switching characteristics but gives no step size. [1] also applies the 40-pulse potentiation/depression trains to both D1 and D2, and in that section describes both as gradual, which is not consistent with the abrupt SET. α_set for D1 is therefore swept; the D2 preset (α = 0.07) represents the fully gradual case.
-- **Analog window unknown for V₂O₅:** [1] reports an ON/OFF ratio of ≈ 5 × 10² for D2 (not reported for D1), but no conductance values and not the range covered by the 40-pulse potentiation/depression trains [1]. The window used for weight storage is therefore swept from 3 (the analog window of the HfO₂ device in [5], about 3–4) to 100 (an ON/OFF ratio below 100 in the integrated TiO₂ crossbar [3]).
+- **Analog window unknown for V₂O₅:** For D2, [1] reports a memory window of ≈ 552 in the abstract and an "OFF/ON ratio" of 5 × 10² in its comparison table (neither for D1), but no conductance values and not the range covered by the 40-pulse potentiation/depression trains [1]. The window used for weight storage is therefore swept from 3 (the analog window of the HfO₂ device in [5], about 3–4) to 100 (an ON/OFF ratio below 100 in the integrated Al₂O₃/TiO₂₋ₓ crossbar [3]).
 - **40 pulses span the window:** [1] uses 40-pulse potentiation and depression trains. It is assumed here that one train spans about 95 % of the window, which sets α for the gradual case.
 - **Noise is not modelled by default:** no cycle-to-cycle variability is reported for V₂O₅ [1], [2]. Noise is studied only in a separate sweep, with one relative σ for both SET and RESET. (In HfO₂, [5] reports fairly high dispersion of the step size, but its values are absolute widths of its own fitted α and cannot be transferred to this model.)
 - **Non-volatile, no drift:** G stays constant between operations. Retention is reported [1], but no drift rate.
@@ -113,7 +112,7 @@ Because the mapping from weights to conductance difference and from pixels to vo
 |---|---|---|---|
 | SET / RESET pulse | +1.1 V / −1.1 V, 1 ms | [1] | Reported (V₂O₅ LTP/LTD pulse trains, applied to both D1 and D2) |
 | Pulses per train | 40 | [1] | Reported |
-| Read voltage | 0.1 V | [3], [5] | Reported for the TiO₂ crossbar [3] and HfO₂ device [5]. [1] does not state a read voltage for its potentiation/depression or endurance measurements (a 0.5 V read pulse is used in its STDP tests). On the ideal circuit the value only scales the currents |
+| Read voltage | 0.1 V | [3], [5] | Reported for the Al₂O₃/TiO₂₋ₓ crossbar [3] and HfO₂ device [5]. [1] does not state a read voltage for its potentiation/depression or endurance measurements (a 0.5 V read pulse is used in its STDP tests). On the ideal circuit the value only scales the currents |
 | G_min (default) | 10 µS | [3] | Reported: conductances in [3] range from 10 to 100 µS. On the ideal circuit the value only scales the currents |
 | Memory window G_max/G_min | 10 (default); swept 3, 10, 30, 100 | [3], [5] | Default from the 10–100 µS range in [3]; analog range not reported for V₂O₅ [1] |
 | α_set, α_reset (D2) | 0.07, 0.07 | [1] | Derived: one 40-pulse train covers 95 % of the window, α = 1 − 0.05^(1/40) ≈ 0.072 (assumption that the train spans the window) |
@@ -140,7 +139,7 @@ Because the mapping from weights to conductance difference and from pixels to vo
 - **Retention:** retention is reported up to 6000 s for D1 and 4500 s for D2 [1] (about 1.25–1.7 h), with no drift rate and no failure criterion given. Whether a V₂O₅ crossbar would hold its weights for longer is therefore unknown.
 - **Endurance:** reported endurance is 7000 cycles for D1 and 5000 cycles for D2 (the abstract says "beyond 7000" for D2) [1]. How partial programming pulses count against these switching cycles is not reported, so wear is not modelled.
 - **Device maturity:** an earlier ITO/V₂O₅ device showed destructive changes of the surface topography after about 10 cycles [2], compared with thousands of cycles for the interface-engineered devices [1].
-- **Benchmark caution:** the network accuracy reported for the V₂O₅ device in [1] differs between the abstract (≈ 86.75 %) and the main text (95.5 %), both on MNIST, so it is not used as a benchmark.
+- **Benchmark caution:** the network accuracy reported for the V₂O₅ device in [1] differs between the abstract (≈ 86.75 %) and the main text (95.5 %), both on MNIST, and the main-text device result is higher than the paper's own ideal software model (93.5 %). It is therefore not used as a benchmark.
 
 ## Out of scope
 
@@ -178,4 +177,3 @@ Left out to keep every result traceable to a source or a clearly labelled sweep:
 [9] C. R. Harris *et al.*, "Array programming with NumPy," *Nature*, vol. 585, no. 7825, pp. 357–362, 2020, doi: 10.1038/s41586-020-2649-2.
 
 [10] J. D. Hunter, "Matplotlib: A 2D graphics environment," *Comput. Sci. Eng.*, vol. 9, no. 3, pp. 90–95, 2007, doi: 10.1109/MCSE.2007.55.
-
