@@ -2,11 +2,11 @@
 
 Simplified toy model, written in Python.
 
-- **Device:** V₂O₅-based resistive memory cell (non-volatile, analog conductance switching)
+- **Device:** V₂O₅-based resistive memory cell, in two reported versions: abrupt SET (D1) and fully gradual switching (D2) [1]
 - **Array:** crossbar of cells storing a weight matrix and computing matrix-vector products in place
 - **Test application:** handwritten digit recognition (8 × 8 digits)
 
-> **Note:** this is a toy model with deliberately limited scope. V₂O₅ shows non-volatile bipolar resistive switching [1], [2]. Two V₂O₅ device types have been reported: one with abrupt SET and gradual RESET (D1), and an interface-engineered one with gradual SET and RESET (D2) [1]. The cell uses a phenomenological soft-bound update rule [5]. Pulse conditions come from the measured V₂O₅ devices [1]. Values that are not reported for V₂O₅ (analog conductance window, step size of the abrupt SET, cycle-to-cycle noise) are swept, not claimed. Every parameter is listed under [Parameters](#parameters) with its source and status.
+> **Note:** this is a toy model with deliberately limited scope. V₂O₅ shows bipolar resistive switching [1], [2], and retention of 4500–6000 s has been reported [1]. Two V₂O₅ device types have been reported: one with abrupt SET and gradual RESET (D1), and an interface-engineered one with gradual SET and RESET (D2) [1]. The cell uses a phenomenological soft-bound update rule [5]. Pulse conditions come from the measured V₂O₅ devices [1]. Values that are not reported for V₂O₅ (the conductance window, the step size of the abrupt SET, and cycle-to-cycle noise) are swept, not claimed. Every parameter is listed under [Parameters](#parameters) with its source and status.
 
 ## Main question
 
@@ -18,19 +18,18 @@ The project builds the hardware model first and uses a small classifier only at 
 
 1. **Cell model** → 2. **Programming** → 3. **Crossbar compute** → 4. **Test application**
 
-- **Stage 1 – Cell model:** conductance state, read, SET/RESET pulses with a switching threshold, separate cycle-to-cycle noise for SET and RESET. Presets D1 (abrupt SET) and D2 (gradual).
-- **Stage 2 – Programming:** write-verify loop [4] for D1 and D2. First one cell, then an 8 × 8 array programmed to random targets. Report pulses needed, final error and pulses used against the reported endurance [1].
+- **Stage 1 – Cell model:** conductance state, read, SET/RESET pulses, optional cycle-to-cycle noise. Presets D1 (abrupt SET) and D2 (gradual).
+- **Stage 2 – Programming:** write-verify loop [4] for D1 and D2. First one cell, then an 8 × 8 array programmed to random targets. Report pulses needed and final error.
 - **Stage 3 – Crossbar compute:** I = Gᵀ·V with differential pairs on an ideal circuit. Error against the exact NumPy product, as a function of the memory window.
 - **Stage 4 – Test application:** program logistic-regression weights (trained in software) into a 65 × 10 differential crossbar and classify test digits. Compare crossbar and software accuracy.
 
-**Sweeps** (one factor at a time, others at default, each averaged over several random seeds):
+**Sweeps** (one factor at a time, others at default; runs with noise are averaged over several random seeds):
 
 | Factor | Values | Why swept |
 |---|---|---|
 | Device preset | D2; D1 with α_set = 0.3, 0.6, 0.9 | D1's SET is reported only as "abrupt", with no step size [1] |
 | Memory window G_max/G_min | 3, 10, 30, 100 | No analog window reported for V₂O₅ [1] |
-| Cycle-to-cycle noise σ | 0.05, 0.1, 0.2, 0.3 | Not reported for V₂O₅ [1], [2]; range based on HfO₂ [5] |
-| Programming tolerance | 1 %, 2 % | 1 % demonstrated in [4] |
+| Cycle-to-cycle noise σ | 0 (default), 0.05, 0.1, 0.2, 0.3 | Not reported for V₂O₅ [1], [2]; studied separately so the main D1/D2 and window results contain no assumed noise level |
 
 ## Output
 
@@ -52,8 +51,8 @@ python vox_crossbar.py
 | Equation | Form | Used for |
 |---|---|---|
 | Ohm's law | I = G·V | Current through one cell |
-| Kirchhoff's current law | I_j = Σᵢ G_ij·V_i | Currents add along each column wire |
-| Matrix-vector product | I = Gᵀ·V | What the whole array computes [6] |
+| Kirchhoff's current law | I_j = Σᵢ G_ij·V_i | Currents add along each column wire [6] |
+| Matrix-vector product | I = Gᵀ·V | What the whole array computes, via Ohm's and Kirchhoff's laws [6]. Here inputs go on the rows and outputs are read on the columns, hence the transpose |
 | Differential pair | W_ij ∝ G⁺_ij − G⁻_ij | Signed weights from two positive conductances [3] |
 | Weight mapping | G± = G_min + (G_max − G_min)·max(±W, 0) / max\|W\| | Weight → target conductance |
 
@@ -65,8 +64,8 @@ For a normalised state w = (G − G_min)/(G_max − G_min), the soft-bound model
 |---|---|---|
 | SET pulse | G ← G + α_set(G_max − G) | Conductance increase, smaller steps near G_max [5] |
 | RESET pulse | G ← G − α_reset(G − G_min) | Conductance decrease, smaller steps near G_min [5] |
-| Cycle-to-cycle noise | α → α·(1 + σ·N(0,1)), separate σ for SET and RESET | Random size of each step |
-| Switching threshold | a pulse changes G only if \|V\| > V_th | Reads do not disturb stored weights |
+| Cycle-to-cycle noise | α → α·(1 + σ·N(0,1)), same σ for SET and RESET | Random size of each step (noise sweep only) |
+| Read vs write | reads (V_read) never change G; only ±1.1 V programming pulses do | Reads do not disturb stored weights |
 | Bounds | G_min ≤ G ≤ G_max | Physical limits |
 
 **Device presets**
@@ -84,26 +83,26 @@ For a normalised state w = (G − G_min)/(G_max − G_min), the soft-bound model
 | Inputs | pixel values 0–16 scaled to 0–V_read; one extra input fixed at V_read for the bias | Voltages applied to the rows |
 | Prediction | digit = argmax_j (I⁺_j − I⁻_j) | Largest differential column current |
 
-Because the mapping from weights to conductance difference and from pixels to voltage are both linear, the differential column currents are proportional to the class scores, so the argmax is unchanged on an ideal array.
+Because the mapping from weights to conductance difference and from pixels to voltage are both linear, and the bias row uses the same scaling as the weights, the differential column currents are proportional to the class scores, so the argmax is unchanged on an ideal, perfectly programmed array. For the same reason, on the ideal circuit the results depend on the window G_max/G_min but not on the absolute values of G_min or V_read, which only scale the currents.
 
 ## Numerical methods
 
 - **Write-verify programming:** read → compare with target → SET or RESET pulse → repeat, until within tolerance or a pulse limit [4].
 - **Vectorised array operations** with NumPy [9].
-- **Monte Carlo variability:** Gaussian cycle-to-cycle noise on each pulse, separate for SET and RESET, averaged over several random seeds.
+- **Monte Carlo variability (noise sweep only):** Gaussian cycle-to-cycle noise on each pulse, averaged over several random seeds.
 - **Off-chip training:** logistic regression with scikit-learn [8]; only inference runs on the crossbar.
 - **Plotting:** Matplotlib [10].
 
 ## Assumptions and simplifications
 
 - **Phenomenological cell:** no oxygen-vacancy, filament or thermal physics. Conductance follows the soft-bound rule of [5] with γ = 1.
-- **Mixed-source parameters:** pulse conditions and device types from V₂O₅ [1]; read voltage and default conductance window from a TiO₂-based crossbar [3] and an HfO₂ device [5]; update rule and noise range from HfO₂ [5]. Each is marked in [Parameters](#parameters).
+- **Mixed-source parameters:** pulse conditions and device types from V₂O₅ [1]; read voltage and default conductance range from a TiO₂-based crossbar [3] and an HfO₂ device [5]; update rule from HfO₂ [5]. Each is marked in [Parameters](#parameters).
 - **"Abrupt" is qualitative:** [1] describes D1's SET as abrupt but gives no step size, so α_set for D1 is swept.
-- **Analog window unknown for V₂O₅:** the reported ON/OFF ratio (≈ 5 × 10²) is for D2 only (D1 not reported) and is the full switching range, not the gradual analog range [1]. The window is therefore swept from 3 (the analog window of the HfO₂ device in [5], about 3–4) to 100 (an ON/OFF ratio below 100 in the integrated TiO₂ crossbar [3]).
+- **Analog window unknown for V₂O₅:** [1] reports an ON/OFF ratio of ≈ 5 × 10² for D2 (not reported for D1), but no conductance values and not the range covered by the 40-pulse potentiation/depression trains [1]. The window used for weight storage is therefore swept from 3 (the analog window of the HfO₂ device in [5], about 3–4) to 100 (an ON/OFF ratio below 100 in the integrated TiO₂ crossbar [3]).
 - **40 pulses span the window:** [1] uses 40-pulse potentiation and depression trains. It is assumed here that one train spans about 95 % of the window, which sets α for the gradual case.
-- **Noise interpretation:** [5] reports a spread of about 0.2 (potentiation) and 0.3 (depression) in the fitted step size. Here this is used as a relative spread σ; the noise level is swept rather than claimed for V₂O₅.
+- **Noise is not modelled by default:** no cycle-to-cycle variability is reported for V₂O₅ [1], [2]. Noise is studied only in a separate sweep, with one relative σ for both SET and RESET. (In HfO₂, [5] reports fairly high dispersion of the step size, but its values are absolute widths of its own fitted α and cannot be transferred to this model.)
 - **Non-volatile, no drift:** G stays constant between operations. Retention is reported [1], but no drift rate.
-- **Linear read:** a cell behaves as a fixed resistor at the read voltage.
+- **Linear read, no read disturb:** a cell behaves as a fixed resistor at the read voltage, and reads never change G. No switching threshold is modelled.
 - **Ideal circuit:** zero wire resistance, ideal drivers, columns at virtual ground, ideal current measurement, DC steady state.
 - **Off-chip training, single layer:** one 65 × 10 weight matrix (64 pixels + bias), stored as 130 × 10 cells.
 
@@ -113,34 +112,32 @@ Because the mapping from weights to conductance difference and from pixels to vo
 |---|---|---|---|
 | SET / RESET pulse | +1.1 V / −1.1 V, 1 ms | [1] | Reported (V₂O₅ LTP/LTD pulse trains) |
 | Pulses per train | 40 | [1] | Reported |
-| Read voltage | 0.1 V | [3], [5] | Reported for the TiO₂ crossbar [3] and HfO₂ device [5]. [1] gives no general read voltage (its 0.5 V read pulse is used only in STDP tests), so 0.1 V is taken from [3], [5] |
-| Switching threshold V_th | 0.8 V | – | Assumption: between the read voltage and the 1.1 V V₂O₅ pulse [1]. [3] trains with ±1.3 V pulses and reports switching near ~1.5 V, but gives no threshold range in the text |
-| G_min (default) | 10 µS | [3] | Reported: conductances in [3] range from 10 to 100 µS |
+| Read voltage | 0.1 V | [3], [5] | Reported for the TiO₂ crossbar [3] and HfO₂ device [5]. [1] does not state a read voltage for its potentiation/depression or endurance measurements (a 0.5 V read pulse is used in its STDP tests). On the ideal circuit the value only scales the currents |
+| G_min (default) | 10 µS | [3] | Reported: conductances in [3] range from 10 to 100 µS. On the ideal circuit the value only scales the currents |
 | Memory window G_max/G_min | 10 (default); swept 3, 10, 30, 100 | [3], [5] | Default from the 10–100 µS range in [3]; analog range not reported for V₂O₅ [1] |
 | α_set, α_reset (D2) | 0.07, 0.07 | [1] | Derived: one 40-pulse train covers 95 % of the window, α = 1 − 0.05^(1/40) ≈ 0.072 (assumption that the train spans the window) |
 | α_set (D1) | 0.3, 0.6, 0.9 (swept) | – | Assumption: [1] reports "abrupt" SET with no step size |
 | α_reset (D1) | 0.07 | [1] | Gradual RESET; same derivation as D2 |
-| Cycle-to-cycle noise σ_set / σ_reset | 0.2 / 0.3 (default); swept 0.05–0.3 | [5] | Based on the spread of fitted step sizes in HfO₂ (~0.2 potentiation, ~0.3 depression); not reported for V₂O₅ |
+| Cycle-to-cycle noise σ (relative, same for SET and RESET) | 0 (default); swept 0.05–0.3 | – | Choice: not reported for V₂O₅ [1], [2] |
 | Soft-bound exponent γ | 1 | [5] | γ = 1 is the simple soft-bound case; [5] finds γ > 1 in the analog region, not modelled here |
-| Programming tolerance | 1 % (default), 2 % | [4] | 1 % demonstrated in [4] |
-| Max pulses per cell | 100 | – | Choice; compared with endurance below |
-| Endurance (for budget) | D1: 7000; D2: 5000 cycles | [1] | Reported; D2 is 5000 in the text but "beyond 7000" in the abstract |
+| Programming tolerance | 1 % | [4] | 1 % demonstrated in [4] |
+| Max pulses per cell | 100 | – | Choice |
 | Array size (Stages 2–3) | 8 × 8 | – | Choice |
 | Array size (Stage 4) | 65 × 10 (× 2 differential) | – | 64 pixels + bias, 10 digits |
-| Dataset | 1797 images, 8 × 8, pixels 0–16 | [7], [8] | scikit-learn `load_digits`, a copy of the test set of the UCI dataset [7]; 80 % train / 20 % test |
+| Dataset | 1797 images, 8 × 8, pixels 0–16 | [7], [8] | scikit-learn `load_digits`, a copy of the test set of the UCI dataset [7]. 80 % train / 20 % test split is a choice |
 
 ## Results to report
 
 - D1 vs D2 pulse curves (G vs pulse number)
 - Programming D1 vs D2: pulses per cell, final error histogram, overshoot
-- Pulses used per full programming vs reported endurance [1]
 - Crossbar output vs exact product, error vs memory window
-- Digit accuracy: software vs crossbar, for D1 vs D2, vs memory window and vs noise
+- Digit accuracy: software vs crossbar, for D1 vs D2 and vs memory window (no noise), then vs noise
 - Which factor hurts accuracy most
 
 ## Discussion points (not modelled)
 
 - **Retention:** reported retention is 6000 s for D1 and 4500 s for D2 [1] (about 1.25–1.7 h), so a real V₂O₅ crossbar may need frequent reprogramming.
+- **Endurance:** reported endurance is 7000 cycles for D1 and 5000 cycles for D2 (the abstract says "beyond 7000" for D2) [1]. How partial programming pulses count against these switching cycles is not reported, so wear is not modelled.
 - **Device maturity:** an earlier ITO/V₂O₅ device showed destructive changes of the surface topography after about 10 cycles [2], compared with thousands of cycles for the interface-engineered devices [1].
 - **Benchmark caution:** the network accuracy reported for the V₂O₅ device in [1] differs between the abstract (≈ 86.75 %) and the main text (95.5 %), both on MNIST, so it is not used as a benchmark.
 
@@ -149,6 +146,8 @@ Because the mapping from weights to conductance difference and from pixels to vo
 Left out to keep every result traceable to a source or a clearly labelled sweep:
 
 - **Device-to-device spread:** no numerical value reported for V₂O₅ [1].
+- **Switching threshold and read disturb:** no threshold value is reported for the V₂O₅ devices [1].
+- **Asymmetric SET/RESET noise:** no V₂O₅ data.
 - **State-dependent nonlinearity (γ > 1):** reported for HfO₂ [5], not for V₂O₅.
 - **Wire resistance and sneak paths:** would need an array model beyond the ideal circuit.
 - **ADC/DAC quantisation and peripheral circuits.**
