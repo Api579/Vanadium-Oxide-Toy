@@ -6,7 +6,7 @@ Simplified toy model, written in Python.
 - **Array:** crossbar of cells storing a weight matrix and computing matrix-vector products in place
 - **Test application:** handwritten digit recognition (8 × 8 digits)
 
-> **Note:** this is a toy model with deliberately limited scope. V₂O₅ shows bipolar resistive switching [1], [2], and retention up to 4500–6000 s has been reported [1]. Two V₂O₅ device types have been reported: one with abrupt SET and gradual RESET (D1), and an interface-engineered one with gradual SET and RESET (D2) [1]. The cell uses a phenomenological soft-bound update rule [5]. Pulse conditions come from the measured V₂O₅ devices [1]. Values that are not reported for V₂O₅ (the conductance window, the step size of the abrupt SET, and cycle-to-cycle noise) are swept, not claimed. Every parameter is listed under [Parameters](#parameters) with its source and status.
+> **Note:** this is a toy model with deliberately limited scope. V₂O₅ shows bipolar resistive switching [1], [2], and retention up to 4500–6000 s has been reported [1]. Two V₂O₅ device types have been reported: one with abrupt SET and gradual RESET (D1), and an interface-engineered one with gradual SET and RESET (D2) [1]. The cell uses a phenomenological soft-bound update rule [5]. Pulse conditions come from the measured V₂O₅ devices [1]. Values that are not reported for V₂O₅ (the conductance window, the step size of the abrupt SET, and cycle-to-cycle noise) are swept, not claimed. The one exception is the gradual step size, which is derived from the reported 40-pulse trains under a stated assumption. Every parameter is listed under [Parameters](#parameters) with its source and status.
 
 ## Main question
 
@@ -117,7 +117,7 @@ Because the mapping from weights to conductance difference and from pixels to vo
 | Memory window G_max/G_min | 10 (default); swept 3, 10, 30, 100 | [3], [5] | Default from the 10–100 µS range in [3]; analog range not reported for V₂O₅ [1] |
 | α_set, α_reset (D2) | 0.07, 0.07 | [1] | Derived: one 40-pulse train covers 95 % of the window, α = 1 − 0.05^(1/40) ≈ 0.072 (assumption that the train spans the window) |
 | α_set (D1) | 0.3, 0.6, 0.9 (swept) | – | Assumption: [1] reports "abrupt" SET with no step size |
-| α_reset (D1) | 0.07 | [1] | Gradual RESET; same derivation as D2 |
+| α_reset (D1) | 0.07 | [1] | Gradual RESET; same derivation and same assumption as D2 |
 | Cycle-to-cycle noise σ (relative, same for SET and RESET) | 0 (default); swept 0.05–0.3 | – | Choice: not reported for V₂O₅ [1], [2] |
 | Soft-bound exponent γ | 1 | [5] | γ = 1 is the simple soft-bound case; [5] finds γ > 1 in the analog region, not modelled here |
 | Programming tolerance | 1 % | [4] | Target only: [4] reached 1 % on single Pt/TiO₂ devices using increasing-amplitude ramps. Whether 1 % is reachable with fixed ±1.1 V pulses is one of the results |
@@ -168,12 +168,4 @@ Left out to keep every result traceable to a source or a clearly labelled sweep:
 
 [5] J. Frascaroli, S. Brivio, E. Covi, and S. Spiga, "Evidence of soft bound behaviour in analogue memristive devices for neuromorphic computing," *Sci. Rep.*, vol. 8, Art. no. 7178, 2018, doi: 10.1038/s41598-018-25376-x.
 
-[6] D. Ielmini and H.-S. P. Wong, "In-memory computing with resistive switching devices," *Nat. Electron.*, vol. 1, no. 6, pp. 333–343, 2018, doi: 10.1038/s41928-018-0092-2.
-
-[7] E. Alpaydin and C. Kaynak, "Optical recognition of handwritten digits," UCI Machine Learning Repository, 1998, doi: 10.24432/C50P49.
-
-[8] F. Pedregosa *et al.*, "Scikit-learn: Machine learning in Python," *J. Mach. Learn. Res.*, vol. 12, pp. 2825–2830, 2011.
-
-[9] C. R. Harris *et al.*, "Array programming with NumPy," *Nature*, vol. 585, no. 7825, pp. 357–362, 2020, doi: 10.1038/s41586-020-2649-2.
-
-[10] J. D. Hunter, "Matplotlib: A 2D graphics environment," *Comput. Sci. Eng.*, vol. 9, no. 3, pp. 90–95, 2007, doi: 10.1109/MCSE.2007.55.
+[6] D. Ielmini and H.-S. P. Wong, "In-memory computing with resistive switching devices," *Nat. Electron.*, vol. 1, no. 6, pp. 333–343, 2018, doi: 10.1038/s41928-018-0092-2
