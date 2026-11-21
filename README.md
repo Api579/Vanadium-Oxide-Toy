@@ -6,7 +6,7 @@ Simplified toy model, written in Python.
 - **Array:** crossbar of cells storing a weight matrix and computing matrix-vector products in place
 - **Test application:** handwritten digit recognition (8 × 8 digits)
 
-> **Note:** this is a toy model. Pulse conditions come from the V₂O₅ devices in [1]. The cell update rule comes from an HfO₂ device [4]. Values not reported for V₂O₅ are either swept or derived under a stated assumption, and each parameter's source is listed under [Parameters](#parameters).
+> **Note:** this is a toy model. Pulse conditions come from the V₂O₅ devices in [1]. The cell update rule comes from an HfO₂ device [4]. Values not reported for V₂O₅ are taken from other devices, swept, or derived under a stated assumption; each parameter's source is listed under [Parameters](#parameters).
 
 ## Main question
 
@@ -51,7 +51,7 @@ Add plots here: D1 vs D2 pulse curves, programming error histograms, accuracy vs
 | Kirchhoff's current law | I_j = Σᵢ G_ij·V_i | Currents add along each column |
 | Matrix-vector product | I = Gᵀ·V | What the array computes [5]. Inputs on rows, outputs on columns, hence the transpose |
 | Differential pair | W_ij ∝ G⁺_ij − G⁻_ij | Signed weights from two positive conductances, as in [2] |
-| Weight mapping | G± = G_min + (G_max − G_min)·max(±W, 0) / max\|W\| | Weight → target conductance |
+| Weight mapping | G± = G_min + (G_max − G_min)·max(±W, 0) / max\|W\| | Weight → target conductance; max\|W\| is taken over the whole matrix, bias row included |
 
 **Cell**
 
@@ -62,7 +62,6 @@ Add plots here: D1 vs D2 pulse curves, programming error histograms, accuracy vs
 | SET pulse | G ← G + α_set(G_max − G) |
 | RESET pulse | G ← G − α_reset(G − G_min) |
 | Read | reads never change G; only programming pulses do |
-| Bounds | G_min ≤ G ≤ G_max |
 
 **Device presets**
 
@@ -94,7 +93,7 @@ Every row, including the bias row, maps a feature value of 1 to V_read, and ever
 - **Phenomenological cell:** no filament, oxygen-vacancy or thermal physics.
 - **Update rule from another material:** the soft-bound rule was measured on HfO₂ [4], not V₂O₅. [4] also finds γ > 1 in the analogue region; γ = 1 is used here.
 - **Gradual step size:** [1] uses trains of 40 pulses. It is assumed that one train covers about 95 % of the window, giving α = 1 − 0.05^(1/40) ≈ 0.072, rounded to 0.07.
-- **Window range:** the sweep runs from 3, about the analogue window of the HfO₂ device in [4], to 100, the upper bound of the ON/OFF ratio (reported as below 100) of the devices in the integrated crossbar of [2].
+- **Window range:** the sweep runs from 3, the low end of the analogue window of about 3–4 for the HfO₂ device in [4], to 100, the upper bound of the ON/OFF ratio (reported as below 100) of the devices in the integrated crossbar of [2].
 - **No noise, no drift, no device-to-device spread:** none is modelled.
 - **Linear read:** a cell behaves as a fixed resistor at the read voltage.
 - **Ideal circuit:** zero wire resistance, ideal drivers, columns at virtual ground, ideal current measurement.
