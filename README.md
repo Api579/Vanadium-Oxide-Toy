@@ -15,8 +15,8 @@ How the 2 V₂O₅ device types (abrupt vs gradual SET) and the unknown ranges o
 ## Stages
 
 1. **Cell model:** initialise the conductance state, read, SET/RESET pulses values, and presets of D1 and D2.
-2. **Programming:** write a verify loop simplified from a cited article [3] for D1 and D2. First one cell, then an 8 × 8 array programmed to random targets. Report pulses needed and final error.
-3. **Crossbar compute:** I = Gᵀ·V with differential pairs on an ideal circuit, using arrays programmed in Stage 2. Error against the exact NumPy product, as a function of the memory window.
+2. **Programming:** write a verify loop simplified from a cited article [3] for D1 and D2. First for one cell, and then the 8 × 8 array programmed to random targets, and report pulses needed and final error.
+3. **Crossbar compute:** I = Gᵀ·V with differential pairs assume on ideal circuit, using arrays programmed in step/stage 2. Error against the exact NumPy product, as a function of the memory window.
 4. **Test application:** program logistic-regression weights (trained in software) into a 65 × 10 differential crossbar and classify test digits. Compare crossbar and software accuracy.
 
 **Sweeps** (one factor at a time; defaults are D2 and a window of 10):
