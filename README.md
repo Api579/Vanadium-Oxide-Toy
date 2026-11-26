@@ -1,21 +1,21 @@
-# Vanadium Oxide (V₂O₅) Crossbar – Weight Storage and Inference
+# Vanadium Oxide (V₂O₅) Crossbar Array.
 
-Simplified toy model, written in Python.
+Simplified model of Vanadium Oxide Crossbar Array in python.
 
-- **Device:** V₂O₅-based resistive memory cell in two reported versions [1]: D1 (Nb/V₂O₅/Ni) with abrupt SET and gradual RESET, and D2 (Nb/NbOₓ/V₂O₅/Ni) with gradual SET and RESET
-- **Array:** crossbar of cells storing a weight matrix and computing matrix-vector products in place
-- **Test application:** handwritten digit recognition (8 × 8 digits)
+- **Device:** V₂O₅-based memory cell, based on two reports [1]: Device 1,D1 , (Nb/V₂O₅/Ni) with an abrupt SET and gradual RESET, and Device 2, D2, (Nb/NbOₓ/V₂O₅/Ni) with gradual SET and gradual RESET.
+- **Array:** crossbar storing weights and calculates vector products.
+- **Test application:** handwritten digit recognition using 8 by 8 digits.
 
-> **Note:** this is a toy model. Pulse conditions come from the V₂O₅ devices in [1]. The cell update rule comes from an HfO₂ device [4]. Values not reported for V₂O₅ are taken from other devices, swept, or derived under a stated assumption; each parameter's source is listed under [Parameters](#parameters).
+> **Note:** Pulse conditions come from the V₂O₅ devices in one of the cited articles [1], while cell update rule comes from an HfO₂ device article [4]. Values not for V₂O₅ in cited articles are derived from other devices.
 
 ## Main question
 
-How do the two V₂O₅ device types (abrupt vs gradual SET) and the unknown memory window affect how accurately weights can be programmed into a crossbar, and the resulting digit-classification accuracy?
+How the 2 V₂O₅ device types (abrupt vs gradual SET) and the unknown ranges of memory values it can store, affects the devices abilities to be used as a system of storage of numeric values?
 
 ## Stages
 
-1. **Cell model:** conductance state, read, SET/RESET pulses. Presets D1 and D2.
-2. **Programming:** write-verify loop (simplified from [3]) for D1 and D2. First one cell, then an 8 × 8 array programmed to random targets. Report pulses needed and final error.
+1. **Cell model:** initialise the conductance state, read, SET/RESET pulses values, and presets of D1 and D2.
+2. **Programming:** write a verify loop simplified from a cited article [3] for D1 and D2. First one cell, then an 8 × 8 array programmed to random targets. Report pulses needed and final error.
 3. **Crossbar compute:** I = Gᵀ·V with differential pairs on an ideal circuit, using arrays programmed in Stage 2. Error against the exact NumPy product, as a function of the memory window.
 4. **Test application:** program logistic-regression weights (trained in software) into a 65 × 10 differential crossbar and classify test digits. Compare crossbar and software accuracy.
 
@@ -26,7 +26,7 @@ How do the two V₂O₅ device types (abrupt vs gradual SET) and the unknown mem
 | Device preset | D2 (default); D1 with α_set = 0.3, 0.6, 0.9 | [1] describes D1's SET as abrupt but gives no step size |
 | Memory window G_max/G_min | 3, 10 (default), 30, 100 | [1] does not report the conductance range of its pulse trains |
 
-The model is deterministic (no noise), so each configuration is run once.
+The model is deterministic: assumes no noise, or randomness, so each configuration needs only be run once.
 
 ## Running
 
@@ -37,7 +37,7 @@ python vox_crossbar.py
 
 ## Output
 
-Add plots here: D1 vs D2 pulse curves, programming error histograms, accuracy vs memory window.
+Add plots here later: D1 V D2 pulse curves, and programming errors histograms, plus accuracy vs memory window.
 
 ---
 
@@ -115,21 +115,13 @@ Every row, including the bias row, maps a feature value of 1 to V_read, and ever
 | Max pulses per cell | 100 | – | Choice |
 | Dataset | 1797 images, 8 × 8, pixels 0–16 | [6], [7] | scikit-learn `load_digits`, a copy of the UCI test set [6]. 80/20 train/test split with a fixed seed |
 
-## Results to report
+## Results 
 
-- D1 vs D2 pulse curves (G vs pulse number)
-- Programming D1 vs D2: pulses per cell, final error histogram
-- Crossbar output vs exact product, error vs memory window
-- Digit accuracy: software vs crossbar, for D1 vs D2 and vs memory window
-
-## Out of scope
-
-- Noise (pulse-to-pulse, cycle-to-cycle, device-to-device): no numerical values for V₂O₅ in [1]
-- Retention, drift and endurance
-- Switching threshold and read disturb
-- γ > 1
-- Wire resistance, sneak paths, ADC/DAC and peripheral circuits
-- Training on the crossbar itself
+To be included
+- D1 vs D2 pulse curves, G V pulse num,
+- Programming of D1 V D2: pulses for each cell, and final error histogram
+- Crossbar output vs exact product (hand calculated) and also error vs memory window
+- Digit accuracy: software vs crossbar ........ for D1 vs D2 and vs memory window the accuracies etc.
 
 ## References
 
