@@ -16,15 +16,15 @@ How the 2 V₂O₅ device types (abrupt vs gradual SET) and the unknown ranges o
 
 1. **Cell model:** initialise the conductance state, read, SET/RESET pulses values, and presets of D1 and D2.
 2. **Programming:** write a verify loop simplified from a cited article [3] for D1 and D2. First for one cell, and then the 8 × 8 array programmed to random targets, and report pulses needed and final error.
-3. **Crossbar compute:** I = Gᵀ·V with differential pairs assume on ideal circuit, using arrays programmed in step/stage 2. Error against the exact NumPy product, as a function of the memory window.
-4. **Test application:** program logistic-regression weights (trained in software) into a 65 × 10 differential crossbar and classify test digits. Compare crossbar and software accuracy.
+3. **Crossbar Calculation:** I = Gᵀ·V with differential pairs assume on ideal circuit, using arrays programmed in step/stage 2. Error against the exact NumPy product, as a function of the memory window.
+4. **Test application:** program the software-trained logistic regression weights into a 65 by 10 crossbar array, use it to recognise test digits, then compare accuracy with the software model not on the crossbar.
 
-**Sweeps** (one factor at a time; defaults are D2 and a window of 10):
+**Sweeps/Test** change only one factor or setting at a time; keep the default of dataset at D2 and memory window at 10:
 
 | Factor | Values | Why swept |
 |---|---|---|
-| Device preset | D2 (default); D1 with α_set = 0.3, 0.6, 0.9 | [1] describes D1's SET as abrupt but gives no step size |
-| Memory window G_max/G_min | 3, 10 (default), 30, 100 | [1] does not report the conductance range of its pulse trains |
+| Device preset | D2 (default value), D1 with α_set = 0.3, 0.6, 0.9 | [1] D1's SET as abrupt, gives no step size |
+| Memory window G_max/G_min | 3, 10 (default value), 30, 100 | [1] does not report the conductance range of its pulse trains |
 
 The model is deterministic: assumes no noise, or randomness, so each configuration needs only be run once.
 
