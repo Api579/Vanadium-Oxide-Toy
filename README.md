@@ -23,8 +23,8 @@ How the 2 V₂O₅ device types (abrupt vs gradual SET) and the unknown ranges o
 
 | Factor | Values | Why swept |
 |---|---|---|
-| Device preset | D2 (default value), D1 with α_set = 0.3, 0.6, 0.9 | [1] D1's SET as abrupt, gives no step size |
-| Memory window G_max/G_min | 3, 10 (default value), 30, 100 | [1] does not report the conductance range of its pulse trains |
+| Device preset | D2 (default value), D1 with α_set = 0.3, 0.6, 0.9 | [1] D1's SET as abrupt, no step size |
+| Memory window: G_max/G_min | 3, 10 (default value), 30, 100 | [1] does not report the conductance range of its pulse trains |
 
 The model is deterministic: assumes no noise, or randomness, so each configuration needs only be run once.
 
@@ -75,29 +75,28 @@ Add plots here later: D1 V D2 pulse curves, and programming errors histograms, p
 | Equation | Form | Used for |
 |---|---|---|
 | Features | x = pixel / 16, so x is in 0–1 | Logistic regression is trained on these features [7] |
-| Class scores | z = Wᵀx + b | Software model |
-| Inputs | row voltage = x·V_read; one extra row fixed at V_read for the bias | Voltages applied to the rows |
+| Class scores | z = Wᵀx + b | Software-Model |
+| Inputs | row voltage = x·V_read; 1 additional row fixed at V_read for bias | Voltages applied to rows |
 | Prediction | digit = argmax_j (I⁺_j − I⁻_j) | Largest differential column current |
 
-Every row, including the bias row, maps a feature value of 1 to V_read, and every weight uses the same conductance scaling. The differential column currents are therefore proportional to z, and on a perfectly programmed ideal array the crossbar gives the same predictions as the software model.
+Every row, includes bias row, maps feature value of 1 to V_read, every weight uses same conductance scaling. The differential column currents are therefore proportional to z, and on a perfectly programmed ideal array the crossbar gives the same predictions as the software model.
 
 ## Numerical methods
 
-- **Write-verify programming (simplified from [3]):** read → compare with target → SET or RESET pulse → repeat, until within tolerance or the pulse limit. As in [3], the state is read after each pulse and the pulse polarity depends on the sign of the error. Unlike [3], which uses ramps of increasing amplitude, every pulse here has the fixed amplitude of ±1.1 V used in [1].
+- **Write-verify function:** read, to, compare with target, to, SET or RESET pulse, then repeat, until within tolerance or pulse limit. As in [3], the state is read after each pulse and the pulse polarity depends on the sign of the error. Unlike [3], which uses increasing amplitude, every pulse here fixes amplitude at ±1.1 V following [1].
 - **Array operations** with NumPy [8].
-- **Off-chip training** with scikit-learn [7]; only inference runs on the crossbar.
+- **Training** with scikit-learn [7]; only inference used on the crossbar.
 - **Plotting** with Matplotlib [9].
 
 ## Assumptions
 
 - **Phenomenological cell:** no filament, oxygen-vacancy or thermal physics.
 - **Update rule from another material:** the soft-bound rule was measured on HfO₂ [4], not V₂O₅. [4] also finds γ > 1 in the analogue region; γ = 1 is used here.
-- **Gradual step size:** [1] uses trains of 40 pulses. It is assumed that one train covers about 95 % of the window, giving α = 1 − 0.05^(1/40) ≈ 0.072, rounded to 0.07.
+- **Gradual step size:** [1] uses trains of 40 pulses, assumed that one train covers 95% of window, hence α = 1 − 0.05^(1/40) ≈ 0.072, ~0.07.
 - **Window range:** the sweep runs from 3, the low end of the analogue window of about 3–4 for the HfO₂ device in [4], to 100, the upper bound of the ON/OFF ratio (reported as below 100) of the devices in the integrated crossbar of [2].
-- **No noise, no drift, no device-to-device spread:** none is modelled.
+- **No noise, no drift modelled**
 - **Linear read:** a cell behaves as a fixed resistor at the read voltage.
 - **Ideal circuit:** zero wire resistance, ideal drivers, columns at virtual ground, ideal current measurement.
-- **Single layer:** one 65 × 10 weight matrix (64 pixels + bias), stored as 130 × 10 cells.
 
 ## Parameters
 
@@ -109,11 +108,11 @@ Every row, including the bias row, maps a feature value of 1 to V_read, and ever
 | G_min | 10 µS | [2] | Device conductances in [2] range from 10 to 100 µS. On the ideal circuit it only scales the currents |
 | Memory window G_max/G_min | 10 (default); swept 3–100 | [2], [4] | Not reported for V₂O₅; see Assumptions |
 | α_set, α_reset (D2); α_reset (D1) | 0.07 | – | Derived under the 95 % assumption |
-| α_set (D1) | 0.3, 0.6, 0.9 | – | Swept |
-| Soft-bound exponent γ | 1 | [4] | Simplest case of the rule in [4] |
-| Programming tolerance | 1 % of the target conductance | [3] | [3] reached 1 % on Pt/TiO₂ devices using increasing-amplitude ramps; whether fixed ±1.1 V pulses can reach it is a result |
-| Max pulses per cell | 100 | – | Choice |
-| Dataset | 1797 images, 8 × 8, pixels 0–16 | [6], [7] | scikit-learn `load_digits`, a copy of the UCI test set [6]. 80/20 train/test split with a fixed seed |
+| α_set (D1) | 0.3, 0.6, 0.9 | – | Sweeping Values |
+| Soft-bound exponent γ | 1 | [4] | Simplest case of rules [4] |
+| Programming tolerance | 1 % of the target conductance | [3] | [3] reached 1% for Pt/TiO₂ devices which uses increasing amplitude ramps |
+| Max pulses per cell | 100 | – | User-defined |
+| Dataset | 1797 images, 8 by 8 (pixels 0–16) | [6], [7] | scikit-learn `load_digits`, a copy of UCI test set [6]. 80/20 train/test split, fixed seed |
 
 ## Results 
 
